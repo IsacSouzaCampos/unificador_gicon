@@ -8,13 +8,11 @@ def main():
             continue
 
         try:
-            with open(f'arquivos/{file}', 'r') as fin:
-            # with open(fr'arquivos\{file}', 'r') as fin:
+            with open(fr'arquivos\{file}', 'r') as fin:
                 text.append(fin.readlines())
         except Exception as e:
             print(e)
-            with open(f'arquivos/{file}', 'r', encoding='utf-8') as fin:
-            # with open(fr'arquivos\{file}', 'r', encoding='utf-8') as fin:
+            with open(fr'arquivos\{file}', 'r', encoding='utf-8') as fin:
                 text.append(fin.readlines())
 
     dictionary = dict()
