@@ -7,58 +7,65 @@ import PySimpleGUI as sg
 def main():
     texts = list()
     for file in os.listdir('arquivos'):
-        if '.py' in file:
+        if os.path.isdir(fr'arquivos\{file}') or 'resultado' in file:
             continue
+            # sg.popup('Certifique-se de que todos os arquivos se encontram no formato ".txt".')
+            # sys.exit()
 
         try:
             with open(fr'arquivos\{file}', 'r') as fin:
                 texts.append(fin.readlines())
-        except Exception as e:
-            print(e)
-            with open(fr'arquivos\{file}', 'r', encoding='utf-8') as fin:
-                texts.append(fin.readlines())
+        except:
+            try:
+                with open(fr'arquivos\{file}', 'rb') as fin:
+                    text = fin.read().decode('ISO-8859-1')
+                    texts.append(text.splitlines())
+            except Exception as e:
+                sg.popup(f'Erro ao ler o arquivo {file}')
+                print(e)
+                sys.exit()
 
-    validate(texts)
+    with open(r'arquivos\resultado.txt', 'rb') as fin:
+        text = fin.read().decode('ISO-8859-1')
+        result_txt = text.splitlines()
+
+    # validate(texts)
     dictionary, company_numbers = get_data(texts)
 
+    dictionary = filter_data(texts, dictionary)
+
     final_text = list()
-    for n in sorted(company_numbers):
-        # print(n, dictionary[n])
-        data = dictionary[n]
-        final_text += texts[data[0]][data[1]:data[2]]
+    for line in result_txt:
+        final_text.append(line)
+        splitted_line = line.split('|')
+        if splitted_line[1] == '0140':
+            print(f'{splitted_line[2] = }')
+            for d_line in dictionary[int(splitted_line[2])]:
+                final_text.append(d_line)
 
-    _max = 0
-    _min = len(texts[0])
-    for key in dictionary:
-        data = dictionary[key]
-        if data[0] == 0:
-            if data[1] < _min:
-                _min = data[1]
-            if data[2] > _max:
-                _max = data[2]
+    # header = texts[0][:_min]
+    # footer = texts[0][_max:]
 
-    header = texts[0][:_min]
-    footer = texts[0][_max:]
+    # final_text = header + final_text + footer
 
-    final_text = header + final_text + footer
-
-    with open('resultado.txt', 'w', encoding='utf-8') as fout:
+    with open(r'arquivos\resultado_final.txt', 'w', encoding='ISO-8859-1') as fout:
         for line in final_text:
-            print(line, end='', file=fout)
+            print(line, file=fout)
 
 
-def validate(texts):
-    cnpjs = list()
-    for text in texts:
-        cnpjs.append(text[0].split('|')[9])
+# def validate(texts: list):
+#     cnpjs = list()
+#     for text in texts:
+#         cnpjs.append(text[0].split('|')[9])
+#
+#     for cnpj in cnpjs:
+#         if cnpj != cnpjs[0]:
+#             sg.popup('Certifique-se de que há apenas arquivos de uma empresa na pasta e tente novamente.')
+#             sys.exit()
 
-    for cnpj in cnpjs:
-        if cnpj != cnpjs[0]:
-            sg.popup('Certifique-se de que há apenas arquivos de uma empresa na pasta e tente novamente.')
-            sys.exit()
 
-
-def get_data(texts):
+def get_data(texts: list) -> tuple:
+    # [text_number(0, 1), initial_line, final_line]
     dictionary = dict()
     company_numbers = list()
     for text_index, t in enumerate(texts):
@@ -81,6 +88,19 @@ def get_data(texts):
                         i += 1
             i += 1
     return dictionary, company_numbers
+
+
+def filter_data(texts, dictionary: dict) -> dict:
+    for key in dictionary:
+        filtered_list = list()
+        data = dictionary[key]
+        lines = texts[data[0]][data[1]:data[2]]
+        for line in lines:
+            if line.split('|')[1] == '0450':
+                filtered_list.append(line)
+        dictionary[key] = filtered_list
+    print(f'{dictionary.keys() = }')
+    return dictionary
 
 
 if __name__ == '__main__':
