@@ -81,24 +81,14 @@ class Lib:
         return dictionary
 
     @staticmethod
-    def extract_0400_registers(texts):
-        _0400_registers = list()
+    def extract_registers(texts, reg_num):
+        registers = list()
         for text in texts:
             for line in text:
-                if line.split('|')[1] == '0400':
-                    _0400_registers.append(line)
+                if line.split('|')[1] == reg_num:
+                    registers.append(line)
 
-        return _0400_registers
-
-    @staticmethod
-    def extract_0500_registers(texts):
-        _0500_registers = list()
-        for text in texts:
-            for line in text:
-                if line.split('|')[1] == '0500':
-                    _0500_registers.append(line)
-
-        return _0500_registers
+        return registers
 
     @staticmethod
     def order_lines(result_txt: list, dictionary: dict) -> list:

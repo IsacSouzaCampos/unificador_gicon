@@ -15,8 +15,8 @@ class View:
 
     @staticmethod
     def error_1(e):
-        sg.popup(f'Erro ao ler o arquivo {e[0]}')
-        print(e[1])
+        sg.popup(f'Erro ao ler o arquivo {e}')
+        print(e)
 
     @staticmethod
     def error_2():

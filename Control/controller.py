@@ -27,10 +27,13 @@ class Controller:
         dictionary, company_numbers = lib.get_data(texts)
         dictionary = lib.filter_data(texts, dictionary)
 
-        _0400_registers = lib.extract_0400_registers(texts)
-        _0500_registers = lib.extract_0500_registers(texts)
-        dictionary[list(dictionary.keys())[0]] = _0400_registers + dictionary[list(dictionary.keys())[0]]
-        dictionary[list(dictionary.keys())[-1]] = dictionary[list(dictionary.keys())[-1]] + _0500_registers
+        registers = dict()
+        registers['0400'] = lib.extract_registers(texts, '0400')
+        registers['0500'] = lib.extract_registers(texts, '0500')
+        registers['0600'] = lib.extract_registers(texts, '0600')
+        dictionary[list(dictionary.keys())[0]] = registers['0400'] + dictionary[list(dictionary.keys())[0]]
+        dictionary[list(dictionary.keys())[-1]] = dictionary[list(dictionary.keys())[-1]] + registers['0500']
+        dictionary[list(dictionary.keys())[-1]] = dictionary[list(dictionary.keys())[-1]] + registers['0600']
 
         final_text = lib.order_lines(result_txt, dictionary)
 
