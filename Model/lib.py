@@ -86,7 +86,7 @@ class Lib:
         for text in texts:
             for line in text:
                 if line.split('|')[1] == reg_num:
-                    registers.append(line)
+                    registers.append(line.strip())
 
         return registers
 
@@ -99,12 +99,10 @@ class Lib:
             line = result_txt[i]
             splitted_line = line.split('|')
             if splitted_line[1] == '0140':
-                # print(f'{splitted_line[2] = }')
                 final_text.append(line.strip())
                 while i < size:
                     line = result_txt[i + 1]
                     if line.split('|')[1] not in ['0150', '0190', '0200', '0400', '0450']:
-                        # print(f'{line = }')
                         for d_line in dictionary[int(splitted_line[2])]:
                             final_text.append(d_line.strip())
                         break
@@ -116,6 +114,60 @@ class Lib:
             i += 1
 
         return final_text
+
+    @staticmethod
+    def order_list(lst: list, col: int) -> list:
+        i = 0
+        while i < len(lst) - 1:
+            _current = lst[i].split('|')[1:-2]  # remove campos vazios ['', 'M100', ..., '']
+            _next = lst[i + 1].split('|')[1:-2]
+            if int(_next[col]) < int(_current[col]):
+                temp = lst[i]
+                lst[i] = lst[i + 1]
+                lst[i + 1] = temp
+                if i > 0:
+                    i -= 2
+            i += 1
+
+        return lst
+
+    @staticmethod
+    def group_list(lst: list, col: int) -> list:
+        if not lst:
+            return []
+        if len(lst) == 1:
+            return [lst]
+
+        temp_list = list()
+        groups = list()
+        for i in range(len(lst) - 1):
+            _current = lst[i].split('|')[1:-2]  # remove campos vazios ['', 'M100', ..., '']
+            _next = lst[i + 1].split('|')[1:-2]
+            if int(_next[col]) != int(_current[col]):
+                temp_list.append(lst[i])
+                groups.append(temp_list)
+                temp_list = []
+            else:
+                temp_list.append(lst[i])
+
+        if lst[-1] == lst[-2]:
+            groups[-1].append(lst[-1])
+        else:
+            groups.append([lst[-1]])
+
+        return groups
+
+    @staticmethod
+    def sum_columns(lst: list, first_index: int) -> str:
+        size = len(lst[0].split('|')[1:-2])
+        result = [0 if c else '' for c in lst[0].split('|')[1:-1][first_index:]]
+        for line in lst:
+            line = line.split('|')[1:-1]
+            for index, pos in enumerate(range(first_index, size + 1)):
+                result[index] += float(line[pos].replace(',', '.')) if line[pos] else ''
+
+        init = lst[0].split("|")[1:-2][:first_index]
+        return f'|{"|".join([str(element).replace(".", ",") for element in init + result])}|'
 
     @staticmethod
     def write_result(final_text: list):
