@@ -77,7 +77,6 @@ class Lib:
                 if line.split('|')[1] == '0450':
                     filtered_list.append(line)
             dictionary[key] = filtered_list
-        # print(f'{dictionary.keys() = }')
         return dictionary
 
     @staticmethod
@@ -138,34 +137,83 @@ class Lib:
         if len(lst) == 1:
             return [lst]
 
+        size = len(lst)
         temp_list = list()
         groups = list()
-        for i in range(len(lst) - 1):
+        for i in range(size - 1):
             _current = lst[i].split('|')[1:-2]  # remove campos vazios ['', 'M100', ..., '']
             _next = lst[i + 1].split('|')[1:-2]
-            if int(_next[col]) != int(_current[col]):
+            if _current[col] != _next[col]:
                 temp_list.append(lst[i])
                 groups.append(temp_list)
                 temp_list = []
             else:
                 temp_list.append(lst[i])
 
-        if lst[-1] == lst[-2]:
-            groups[-1].append(lst[-1])
+        if temp_list:
+            groups.append(temp_list)
+
+        last = lst[-1].split("|")[1:-2]
+        next_to_last = lst[-2].split("|")[1:-2]
+        if last[col] == next_to_last[col]:
+            if groups:
+                groups[-1].append(lst[-1])
+            else:
+                groups.append([lst[-1]])
         else:
             groups.append([lst[-1]])
 
         return groups
 
     @staticmethod
-    def sum_columns(lst: list, first_index: int) -> str:
+    def group_aliquot(lst: list, col: int) -> list:
+        if not lst:
+            return []
+        if len(lst) == 1:
+            return [lst]
+
+        size = len(lst)
+        temp_list = list()
+        groups = list()
+        for i in range(size - 1):
+            _current = lst[i].split('|')[1:-2]  # remove campos vazios ['', 'M100', ..., '']
+            _next = lst[i + 1].split('|')[1:-2]
+            if round(float(_current[col].replace(',', '.')), 2) != round(float(_next[col].replace(',', '.')), 2):
+                temp_list.append(lst[i])
+                groups.append(temp_list)
+                temp_list = []
+            else:
+                temp_list.append(lst[i])
+
+        if temp_list:
+            groups.append(temp_list)
+
+        last = lst[-1].split("|")[1:-2]
+        next_to_last = lst[-2].split("|")[1:-2]
+        if round(float(next_to_last[col].replace(',', '.')), 2) == round(float(last[col].replace(',', '.')), 2):
+            if groups:
+                groups[-1].append(lst[-1])
+            else:
+                groups.append([lst[-1]])
+        else:
+            groups.append([lst[-1]])
+
+        return groups
+
+    @staticmethod
+    def sum_columns(lst: list, first_index: int, aliquot_col: int = None) -> str:
+        aliquot = lst[0].split('|')[1:-1][aliquot_col]
         size = len(lst[0].split('|')[1:-2])
-        result = [0 if c else '' for c in lst[0].split('|')[1:-1][first_index:]]
+        result = [0 if c.replace(',', '').isnumeric() else c for c in lst[0].split('|')[1:-1][first_index:]]
         for line in lst:
             line = line.split('|')[1:-1]
-            for index, pos in enumerate(range(first_index, size + 1)):
-                result[index] += float(line[pos].replace(',', '.')) if line[pos] else ''
+            for idx, pos in enumerate(range(first_index, size + 1)):
+                value = line[pos].replace(',', '.')
+                result[idx] += float(value) if value.replace('.', '').isnumeric() else ''
+                result[idx] = round(result[idx], 2) if isinstance(result[idx], float) else result[idx]
 
+        if aliquot_col is not None:
+            result[aliquot_col - first_index] = aliquot
         init = lst[0].split("|")[1:-2][:first_index]
         return f'|{"|".join([str(element).replace(".", ",") for element in init + result])}|'
 
