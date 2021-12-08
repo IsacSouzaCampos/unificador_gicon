@@ -33,12 +33,14 @@ class Controller:
         # registers['0600'] = lib.extract_registers(texts, '0600')
 
         # M100 e M200 separar pelas aliquotas (coluna 5)
-        for reg_value in ['M100', 'M105']:
+        for reg_value in ['M100', 'M105', 'M200']:
             registers[reg_value] = lib.extract_registers(texts, reg_value)
+
+        for reg_value in ['M100', 'M105']:
             registers[reg_value] = lib.order_list(registers[reg_value], 1)
             registers[reg_value] = lib.group_list(registers[reg_value], 1)
 
-            temp_registers = list()
+            temp_registers = []
             for reg in registers[reg_value]:
                 temp_registers.append(lib.order_list(reg, 2))
             registers[reg_value] = temp_registers
@@ -53,9 +55,9 @@ class Controller:
                 temp_registers.append(lib.group_list(regs, 2))
             registers[reg_value] = temp_registers
 
-            for reg in registers[reg_value]:
-                print(f'{reg = }')
-            print()
+            # for reg in registers[reg_value]:
+            #     print(f'{reg = }')
+            # print()
 
             # temp_registers = []
             # for reg in registers[reg_value]:
@@ -82,12 +84,26 @@ class Controller:
         for regs1 in registers['M100']:
             for regs2 in regs1:
                 for lst in regs2:
-                    # print(f'{lst = }')
                     temp_registers.append(lib.sum_columns(lst, first_index=3, aliquot_col=4))
         registers['M100'] = temp_registers
-        print()
+
+        temp_registers = []
+        for regs in registers['M105']:
+            for lst in regs:
+                temp_registers.append(lib.sum_columns(lst, first_index=3))
+        registers['M105'] = temp_registers
+
+        registers['M200'] = [lib.sum_columns(registers['M200'], first_index=1)]
 
         for reg in registers['M100']:
+            print(f'{reg = }')
+        print()
+
+        for reg in registers['M105']:
+            print(f'{reg = }')
+        print()
+
+        for reg in registers['M200']:
             print(f'{reg = }')
         print()
 

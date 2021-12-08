@@ -202,11 +202,17 @@ class Lib:
 
     @staticmethod
     def sum_columns(lst: list, first_index: int, aliquot_col: int = None) -> str:
-        aliquot = lst[0].split('|')[1:-1][aliquot_col]
-        size = len(lst[0].split('|')[1:-2])
-        result = [0 if c.replace(',', '').isnumeric() else c for c in lst[0].split('|')[1:-1][first_index:]]
+        lst_splitted = list()
         for line in lst:
-            line = line.split('|')[1:-1]
+            lst_splitted.append(line.split('|')[1:-1])
+
+        aliquot = -1
+        if aliquot_col is not None:
+            aliquot = lst_splitted[0][aliquot_col]
+
+        size = len(lst_splitted[0][:-1])
+        result = [0 if c.replace(',', '').isnumeric() else c for c in lst_splitted[0][first_index:]]
+        for line in lst_splitted:
             for idx, pos in enumerate(range(first_index, size + 1)):
                 value = line[pos].replace(',', '.')
                 result[idx] += float(value) if value.replace('.', '').isnumeric() else ''
@@ -214,6 +220,7 @@ class Lib:
 
         if aliquot_col is not None:
             result[aliquot_col - first_index] = aliquot
+
         init = lst[0].split("|")[1:-2][:first_index]
         return f'|{"|".join([str(element).replace(".", ",") for element in init + result])}|'
 
