@@ -22,7 +22,8 @@ class Lib:
         try:
             with open(fr'arquivos\{file}', 'r') as fin:
                 return fin.readlines()
-        except:
+        except Exception as e:
+            print(e)
             try:
                 with open(fr'arquivos\{file}', 'rb') as fin:
                     text = fin.read().decode('ISO-8859-1')
@@ -36,7 +37,8 @@ class Lib:
             with open(r'arquivos\resultado.txt', 'rb') as fin:
                 text = fin.read().decode('ISO-8859-1')
                 result_txt = text.splitlines()
-        except:
+        except Exception as e:
+            print(e)
             raise Exception
 
         return result_txt
@@ -90,7 +92,17 @@ class Lib:
         return registers
 
     @staticmethod
-    def order_lines(result_txt: list, dictionary: dict) -> list:
+    def extract_m_registers(texts, reg_type: int):
+        registers = list()
+        for text in texts:
+            for line in text:
+                if f'M{reg_type}' in line.split('|')[1]:
+                    registers.append(line.strip())
+
+        return registers
+
+    @staticmethod
+    def order_lines(result_txt: list, dictionary: dict, m_registers: list) -> list:
         size = len(result_txt)
         final_text = list()
         i = 0
@@ -108,6 +120,10 @@ class Lib:
                     else:
                         final_text.append(line.strip())
                     i += 1
+            elif splitted_line[1] == 'M001':
+                final_text.append(line.strip())
+                for m_regs_line in m_registers:
+                    final_text.append(m_regs_line.strip())
             else:
                 final_text.append(line.strip())
             i += 1
@@ -213,16 +229,90 @@ class Lib:
         size = len(lst_splitted[0][:-1])
         result = [0 if c.replace(',', '').isnumeric() else c for c in lst_splitted[0][first_index:]]
         for line in lst_splitted:
-            for idx, pos in enumerate(range(first_index, size + 1)):
+            for i, pos in enumerate(range(first_index, size + 1)):
                 value = line[pos].replace(',', '.')
-                result[idx] += float(value) if value.replace('.', '').isnumeric() else ''
-                result[idx] = round(result[idx], 2) if isinstance(result[idx], float) else result[idx]
+                if value.replace('.', '').isnumeric():
+                    result[i] += float(value)
+
+                result[i] = round(result[i], 2) if isinstance(result[i], float) else result[i]
+                if result[i] == 0:
+                    result[i] = int(result[i])
 
         if aliquot_col is not None:
-            result[aliquot_col - first_index] = aliquot
+            aliquot = aliquot.replace(',', '.')
+            aliquot = round(float(aliquot), 2)
+            result[aliquot_col - first_index] = str(aliquot).replace('.', ',')
 
         init = lst[0].split("|")[1:-2][:first_index]
         return f'|{"|".join([str(element).replace(".", ",") for element in init + result])}|'
+
+    def sum_m_regs_cols(self, texts):
+        registers = dict()
+        for reg_value in ['M100', 'M105', 'M110', 'M200', 'M205', 'M210', 'M500', 'M505', 'M510',
+                          'M600', 'M605', 'M610']:
+            registers[reg_value] = self.extract_registers(texts, reg_value)
+
+        for reg_value in ['M100', 'M105', 'M110', 'M205', 'M210', 'M500', 'M505', 'M510',
+                          'M600', 'M605', 'M610']:
+            registers[reg_value] = self.order_list(registers[reg_value], 1)
+            registers[reg_value] = self.group_list(registers[reg_value], 1)
+
+        for reg_value in ['M100', 'M105', 'M110']:
+            temp_registers = []
+            for reg in registers[reg_value]:
+                temp_registers.append(self.order_list(reg, 2))
+            registers[reg_value] = temp_registers
+
+            temp_registers = []
+            for regs in registers[reg_value]:
+                temp_registers.append(self.group_list(regs, 2))
+            registers[reg_value] = temp_registers
+
+        # group by aliquot
+        for reg_value in ['M100']:
+            temp_registers1 = []
+            for regs1 in registers[reg_value]:
+                temp_registers2 = []
+                for regs2 in regs1:
+                    temp_registers2.append(self.group_aliquot(regs2, 4))
+                temp_registers1.append(temp_registers2)
+            registers[reg_value] = temp_registers1
+
+        temp_registers = []
+        for regs1 in registers['M100']:
+            for regs2 in regs1:
+                for lst in regs2:
+                    temp_registers.append(self.sum_columns(lst, first_index=3, aliquot_col=4))
+        registers['M100'] = temp_registers
+
+        temp_registers = []
+        for regs in registers['M105']:
+            for lst in regs:
+                temp_registers.append(self.sum_columns(lst, first_index=3))
+        registers['M105'] = temp_registers
+
+        temp_registers = []
+        for regs in registers['M110']:
+            for lst in regs:
+                temp_registers.append(self.sum_columns(lst, first_index=3))
+        registers['M110'] = temp_registers
+
+        registers['M200'] = [self.sum_columns(registers['M200'], first_index=1)]
+
+        temp_registers = []
+        for lst in registers['M205']:
+            temp_registers.append(self.sum_columns(lst, first_index=3))
+        registers['M205'] = temp_registers
+
+        temp_registers = []
+        for lst in registers['M210']:
+            temp_registers.append(self.sum_columns(lst, first_index=2, aliquot_col=7))
+        registers['M210'] = temp_registers
+
+        return registers['M100'], registers['M105'], registers['M110'], \
+            registers['M200'], registers['M205'], registers['M210'], \
+            registers['M500'], registers['M505'], registers['M510'], \
+            registers['M600'], registers['M605'], registers['M610']
 
     @staticmethod
     def write_result(final_text: list):
