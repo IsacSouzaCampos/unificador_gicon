@@ -92,14 +92,85 @@ class Lib:
         return registers
 
     @staticmethod
-    def extract_m_registers(texts, reg_type: int):
+    def extract_m_registers(texts):
+        texts_regs = [list()] * len(texts)
         registers = list()
-        for text in texts:
+        for i, text in enumerate(texts):
             for line in text:
-                if f'M{reg_type}' in line.split('|')[1]:
+                value = line.split('|')[1]
+                if value[0] == 'M' and value != 'M001' and value != 'M990':
                     registers.append(line.strip())
+            texts_regs[i] = registers
+            registers = []
+        return texts_regs
+
+    @staticmethod
+    def set_dependencies(m_regs: list) -> list:
+        registers = list()
+        size = len(m_regs)
+        i = 0
+        while i < size:
+            reg_value = m_regs[i].split('|')[1]
+            if reg_value[2:] == '00':
+                # print(f'{reg_value = }')
+                current_root = m_regs[i]
+                registers.append({current_root: list()})
+
+                i += 1
+                reg_lst = list()
+                current_reg_value = m_regs[i].split('|')[1]
+                while i < size:
+                    reg_value = m_regs[i].split('|')[1]
+                    if reg_value != current_reg_value:
+                        if reg_value[2:] != '00':
+                            registers[-1][current_root].append(reg_lst)
+                            current_reg_value = m_regs[i].split('|')[1]
+                            reg_lst = [m_regs[i]]
+                            i += 1
+                        else:
+                            registers[-1][current_root].append(reg_lst)
+                            break
+                    else:
+                        reg_lst.append(m_regs[i])
+                        i += 1
+                i -= 1
+            i += 1
 
         return registers
+
+    @staticmethod
+    def order_m_regs(texts_m_regs: list) -> list:
+        ordered_m_regs = list()
+        regs0_lst = list()
+        regs1_lst = list()
+
+        current_reg0 = list(texts_m_regs[0][0].keys())[0].split('|')[1]
+        current_reg1 = list(texts_m_regs[1][0].keys())[0].split('|')[1]
+        i = j = 0
+        while i < len(texts_m_regs[0]):
+            reg0 = texts_m_regs[0][i]
+            if list(reg0.keys())[0].split('|')[1] != current_reg0:
+                while j < len(texts_m_regs[1]):
+                    reg1 = texts_m_regs[1][j]
+                    if list(reg1.keys())[0].split('|')[1] != current_reg1:
+                        ordered_m_regs += regs0_lst + regs1_lst
+                        regs0_lst = []
+                        regs1_lst = []
+                        current_reg0 = list(reg0.keys())[0].split('|')[1]
+                        current_reg1 = list(reg1.keys())[0].split('|')[1]
+                        break
+                    else:
+                        regs1_lst.append(reg1)
+                        j += 1
+            else:
+                regs0_lst.append(reg0)
+                i += 1
+
+        if i == len(texts_m_regs[0]):
+            ordered_m_regs += regs0_lst + texts_m_regs[1][j:]
+        else:
+            ordered_m_regs += texts_m_regs[0][i:] + regs1_lst
+        return ordered_m_regs
 
     @staticmethod
     def order_lines(result_txt: list, dictionary: dict, m_registers: list) -> list:
