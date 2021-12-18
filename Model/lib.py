@@ -16,16 +16,17 @@ class Lib:
 
     @staticmethod
     def extract_file_lines(directory: str, file: str) -> list or None:
-        if os.path.isdir(fr'{directory}\{file}') or 'resultado' in file:
+        directory += '/' if os.name == 'posix' else '\\'
+        if os.path.isdir(fr'{directory}{file}') or 'resultado' in file:
             return
 
         try:
-            with open(fr'arquivos\{file}', 'r') as fin:
+            with open(fr'{directory}{file}', 'r') as fin:
                 return fin.readlines()
         except Exception as e:
             print(e)
             try:
-                with open(fr'arquivos\{file}', 'rb') as fin:
+                with open(fr'{directory}{file}', 'rb') as fin:
                     text = fin.read().decode('ISO-8859-1')
                     return text.splitlines()
             except Exception as e:
@@ -33,8 +34,9 @@ class Lib:
 
     @staticmethod
     def extract_result_file_lines() -> list:
+        directory = 'arquivos/' if os.name == 'posix' else 'arquivos\\'
         try:
-            with open(r'arquivos\resultado.txt', 'rb') as fin:
+            with open(fr'{directory}resultado.txt', 'rb') as fin:
                 text = fin.read().decode('ISO-8859-1')
                 result_txt = text.splitlines()
         except Exception as e:
@@ -103,6 +105,21 @@ class Lib:
             texts_regs[i] = registers
             registers = []
         return texts_regs
+
+    @staticmethod
+    def gen_parentness(texts_m_regs: list) -> list:
+        registers = list()
+        values = ('M100', 'M200', 'M500', 'M600')
+
+        for m_regs in texts_m_regs:
+            for reg in m_regs:
+                reg_value = reg.split('|')[1]
+                if reg_value in values:
+                    registers.append([reg])
+                else:
+                    registers[-1].append(reg)
+
+        return registers
 
     @staticmethod
     def set_dependencies(m_regs: list) -> list:

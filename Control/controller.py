@@ -37,69 +37,68 @@ class Controller:
         # dictionary[list(dictionary.keys())[-1]] = dictionary[list(dictionary.keys())[-1]] + registers['0500']
         # dictionary[list(dictionary.keys())[-1]] = dictionary[list(dictionary.keys())[-1]] + registers['0600']
 
+        print('*****EXTRAINDO VALORES*****')
         texts_m_regs = lib.extract_m_registers(texts)
 
-        print('*****EXTRAINDO VALORES*****')
-        values = ['M100', 'M105', 'M110', 'M200', 'M205', 'M210', 'M500', 'M505', 'M510', 'M600', 'M605', 'M610']
-        registers.update({k: list() for k in values})
-        for m_regs in texts_m_regs:
-            for reg in m_regs:
-                reg_value = reg.split('|')[1]
-                for value in values:
-                    if value == reg_value:
-                        registers[value].append(reg)
+        registers = lib.gen_parentness(texts_m_regs)
 
-        for i in [1, 2, 5, 6]:
-            print(f'{i = }')
-            print(f'{registers[f"M{i}00"] = }')
-            print(f'{registers[f"M{i}05"] = }')
-            print(f'{registers[f"M{i}10"] = }')
-        print('\n')
+        for reg in registers:
+            print(reg)
 
-        for value in [100, 105, 205, 210, 500, 505, 605, 610]:
-            registers[f'M{value}'] = lib.order_list(registers[f'M{value}'], 1)
-
-        for i in [1, 2, 5, 6]:
-            print(f'{i = }')
-            print(f'{registers[f"M{i}00"] = }')
-            print(f'{registers[f"M{i}05"] = }')
-            print(f'{registers[f"M{i}10"] = }')
-        print('\n')
-
-        for value in [100, 105, 500, 505]:
-            registers[f'M{value}'] = lib.order_list(registers[f'M{value}'], 2)
-
-        for i in [1, 2, 5, 6]:
-            print(f'{i = }')
-            print(f'{registers[f"M{i}00"] = }')
-            print(f'{registers[f"M{i}05"] = }')
-            print(f'{registers[f"M{i}10"] = }')
-        print('\n')
-
-        for value in [100, 105, 500, 505]:
-            if value == 100:
-                registers[f'M{value}'] = lib.sum_columns(registers[f'M{value}'], first_index=3, aliquot_col=4)
-            elif value == 210:
-                registers[f'M{value}'] = lib.sum_columns(registers[f'M{value}'], first_index=3, aliquot_col=7)
-            else:
-                registers[f'M{value}'] = lib.sum_columns(registers[f'M{value}'], first_index=3)
-
-        for i in [1, 2, 5, 6]:
-            print(f'{i = }')
-            print(f'{registers[f"M{i}00"] = }')
-            print(f'{registers[f"M{i}05"] = }')
-            print(f'{registers[f"M{i}10"] = }')
-        print('\n')
-
-        for i, m_regs in enumerate(texts_m_regs):
-            texts_m_regs[i] = lib.set_dependencies(m_regs)
+        # for i in [1, 2, 5, 6]:
+        #     print(f'{i = }')
+        #     print(f'{registers[f"M{i}00"] = }')
+        #     print(f'{registers[f"M{i}05"] = }')
+        #     print(f'{registers[f"M{i}10"] = }')
+        # print('\n')
+        #
+        # print('*****ORDENANDO PELA PRIMEIRA COLUNA*****')
+        # for value in [100, 105, 205, 210, 500, 505, 605, 610]:
+        #     registers[f'M{value}'] = lib.order_list(registers[f'M{value}'], 1)
+        #
+        # for i in [1, 2, 5, 6]:
+        #     print(f'{i = }')
+        #     print(f'{registers[f"M{i}00"] = }')
+        #     print(f'{registers[f"M{i}05"] = }')
+        #     print(f'{registers[f"M{i}10"] = }')
+        # print('\n')
+        #
+        # print('*****ORDENANDO PELA SEGUNDA COLUNA*****')
+        # for value in [100, 105, 500, 505]:
+        #     registers[f'M{value}'] = lib.order_list(registers[f'M{value}'], 2)
+        #
+        # for i in [1, 2, 5, 6]:
+        #     print(f'{i = }')
+        #     print(f'{registers[f"M{i}00"] = }')
+        #     print(f'{registers[f"M{i}05"] = }')
+        #     print(f'{registers[f"M{i}10"] = }')
+        # print('\n')
+        #
+        # print('*****SOMANDO COLUNAS*****')
+        # for value in [100, 105, 500, 505]:
+        #     if value == 100:
+        #         registers[f'M{value}'] = lib.sum_columns(registers[f'M{value}'], first_index=3, aliquot_col=4)
+        #     elif value == 210:
+        #         registers[f'M{value}'] = lib.sum_columns(registers[f'M{value}'], first_index=3, aliquot_col=7)
+        #     else:
+        #         registers[f'M{value}'] = lib.sum_columns(registers[f'M{value}'], first_index=3)
+        #
+        # for i in [1, 2, 5, 6]:
+        #     print(f'{i = }')
+        #     print(f'{registers[f"M{i}00"] = }')
+        #     print(f'{registers[f"M{i}05"] = }')
+        #     print(f'{registers[f"M{i}10"] = }')
+        # print('\n')
+        #
+        # for i, m_regs in enumerate(texts_m_regs):
+        #     texts_m_regs[i] = lib.set_dependencies(m_regs)
 
         # for text_regs in texts_m_regs:
         #     for reg in text_regs:
         #         print(list(reg.keys())[0])
         # print('\n')
 
-        m_regs = lib.order_m_regs(texts_m_regs)
+        # m_regs = lib.order_m_regs(texts_m_regs)
 
         # for reg in m_regs:
         #     # print(list(reg.keys())[0])
