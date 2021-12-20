@@ -224,7 +224,7 @@ class Lib:
         while i < len(lst) - 1:
             _current = lst[i].split('|')[1:-2]  # remove campos vazios ['', 'M100', ..., '']
             _next = lst[i + 1].split('|')[1:-2]
-            if int(_next[col]) < int(_current[col]):
+            if float(_next[col].replace(',', '.')) < float(_current[col].replace(',', '.')):
                 temp = lst[i]
                 lst[i] = lst[i + 1]
                 lst[i + 1] = temp
@@ -247,19 +247,21 @@ class Lib:
         for i in range(size - 1):
             _current = lst[i].split('|')[1:-2]  # remove campos vazios ['', 'M100', ..., '']
             _next = lst[i + 1].split('|')[1:-2]
-            if _current[col] != _next[col]:
+            if float(_current[col].replace(',', '.')) != float(_next[col].replace(',', '.')):
                 temp_list.append(lst[i])
                 groups.append(temp_list)
                 temp_list = []
             else:
+                # print(f'{float(_current[col].replace(",", ".")) = }')
+                # print(f'{float(_next[col].replace(",", ".")) = }')
                 temp_list.append(lst[i])
 
         if temp_list:
             groups.append(temp_list)
 
-        last = lst[-1].split("|")[1:-2]
-        next_to_last = lst[-2].split("|")[1:-2]
-        if last[col] == next_to_last[col]:
+        last = lst[-1].split('|')[1:-2]
+        next_to_last = lst[-2].split('|')[1:-2]
+        if float(last[col].replace(',', '.')) == float(next_to_last[col].replace(',', '.')):
             if groups:
                 groups[-1].append(lst[-1])
             else:
@@ -320,6 +322,7 @@ class Lib:
             for i, pos in enumerate(range(first_index, size + 1)):
                 value = line[pos].replace(',', '.')
                 if value.replace('.', '').isnumeric():
+                    result[i] = 0 if not result[i] else result[i]
                     result[i] += float(value)
 
                 result[i] = round(result[i], 2) if isinstance(result[i], float) else result[i]
