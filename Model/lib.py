@@ -156,6 +156,12 @@ class Lib:
         return registers
 
     @staticmethod
+    def get_last_position(reg_value: str, text: list) -> int:
+        for i in range(len(text) - 1, -1, -1):
+            if text[i].split('|')[1] == reg_value:
+                return i
+
+    @staticmethod
     def order_m_regs(texts_m_regs: list) -> list:
         ordered_m_regs = list()
         regs0_lst = list()
@@ -189,8 +195,7 @@ class Lib:
             ordered_m_regs += texts_m_regs[0][i:] + regs1_lst
         return ordered_m_regs
 
-    @staticmethod
-    def order_lines(result_txt: list, dictionary: dict, m_registers: list) -> list:
+    def order_lines(self, result_txt: list, dictionary: dict, regs_0500_0600: list, m_registers: list) -> list:
         size = len(result_txt)
         final_text = list()
         i = 0
@@ -216,7 +221,8 @@ class Lib:
                 final_text.append(line.strip())
             i += 1
 
-        return final_text
+        last_pos = self.get_last_position("0990", final_text)
+        return final_text[:last_pos] + [reg for reg in regs_0500_0600] + final_text[last_pos:]
 
     @staticmethod
     def order_list(lst: list, col: int) -> list:

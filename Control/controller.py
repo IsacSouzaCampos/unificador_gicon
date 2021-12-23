@@ -34,8 +34,7 @@ class Controller:
         registers['0600'] = lib.extract_registers(texts, '0600')
 
         dictionary[list(dictionary.keys())[0]] = registers['0400'] + dictionary[list(dictionary.keys())[0]]
-        dictionary[list(dictionary.keys())[-1]] = dictionary[list(dictionary.keys())[-1]] + registers['0500']
-        dictionary[list(dictionary.keys())[-1]] = dictionary[list(dictionary.keys())[-1]] + registers['0600']
+        regs_0500_0600 = [reg for reg in registers['0500']] + [reg for reg in registers['0600']]
 
         # print('*****EXTRAINDO VALORES*****')
         texts_m_regs = lib.extract_m_registers(texts)
@@ -46,7 +45,7 @@ class Controller:
         #     print(reg)
 
         values = set()
-        for i in [1, 2, 6]:
+        for i in [1, 2, 4, 6, 8]:
             values.add(f'M{i}00')
             values.add(f'M{i}05')
             values.add(f'M{i}10')
@@ -197,11 +196,12 @@ class Controller:
         # print(f'{registers["M610"] = }')
 
         m_regs = list()
-        for reg_value in ('M100', 'M105', 'M200', 'M205', 'M210', 'M500', 'M600', 'M605', 'M610'):
+        for reg_value in ('M100', 'M105', 'M200', 'M205', 'M210', 'M400', 'M405', 'M410', 'M500',
+                          'M600', 'M605', 'M610', 'M800', 'M805', 'M810'):
             for register in registers[reg_value]:
                 m_regs.append(register)
         # print(f'{m_regs = }')
 
-        final_text = lib.order_lines(result_txt, dictionary, m_regs)
+        final_text = lib.order_lines(result_txt, dictionary, regs_0500_0600, m_regs)
         lib.write_result(final_text)
         view.close_main_window()
